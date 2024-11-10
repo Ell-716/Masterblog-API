@@ -36,22 +36,33 @@ def validate_post_data(data):
 
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
+    # Get the sorting and direction parameters
     sort = request.args.get('sort')
     direction = request.args.get('direction')
 
+    # Validate sort and direction
     if sort and sort not in ['title', 'content']:
         return jsonify({"error": "Invalid sort field. Must be 'title' or 'content'."}), 400
 
     if direction and direction not in ['asc', 'desc']:
         return jsonify({"error": "Invalid direction. Must be 'asc' or 'desc'."}), 400
 
-    if not sort or not direction:
-        return jsonify(POSTS)
+    # Handle pagination parameters
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 5))
 
-    # Sort the posts based on the given parameters
-    sorted_posts = sorted(POSTS, key=lambda post: post[sort], reverse=(direction == 'desc'))
+    # First, apply sorting if sort and direction are provided
+    sorted_posts = POSTS
+    if sort:
+        sorted_posts = sorted(POSTS, key=lambda post: post[sort], reverse=(direction == 'desc'))
 
-    return jsonify(sorted_posts)
+    # Then, apply pagination to the sorted posts
+    start_index = (page - 1) * limit
+    end_index = start_index + limit
+    paginated_posts = sorted_posts[start_index:end_index]
+
+    # Return the paginated and optionally sorted posts
+    return jsonify(paginated_posts)
 
 
 @app.route('/api/posts', methods=['POST'])
