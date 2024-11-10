@@ -1,8 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
+
+# Initialize Limiter and pass the key_func directly
+limiter = Limiter(get_remote_address, app=app)
 
 POSTS = [
     {"id": 1, "title": "First post", "content": "This is the first post."},
@@ -35,6 +40,7 @@ def validate_post_data(data):
 
 
 @app.route('/api/posts', methods=['GET'])
+@limiter.limit("10/minute")  # Limit to 10 requests per minute
 def get_posts():
     # Get the sorting and direction parameters
     sort = request.args.get('sort')
@@ -66,6 +72,7 @@ def get_posts():
 
 
 @app.route('/api/posts', methods=['POST'])
+@limiter.limit("10/minute")
 def add_post():
     new_post = request.get_json()
 
@@ -87,6 +94,7 @@ def find_post_by_id(post_id):
 
 
 @app.route('/api/posts/<int:id>', methods=['DELETE'])
+@limiter.limit("10/minute")
 def delete_post(id):
     post = find_post_by_id(id)
 
@@ -101,6 +109,7 @@ def delete_post(id):
 
 
 @app.route('/api/posts/<int:id>', methods=['PUT'])
+@limiter.limit("10/minute")
 def update_post(id):
     post = find_post_by_id(id)
 
@@ -123,6 +132,7 @@ def update_post(id):
 
 
 @app.route('/api/posts/search', methods=['GET'])
+@limiter.limit("10/minute")
 def search_post():
     search_posts = []
 
@@ -137,6 +147,11 @@ def search_post():
 
     # Return the matching posts (or an empty list if no match)
     return jsonify(search_posts)
+
+
+@app.errorhandler(429)
+def rate_limit_exceeded(e):
+    return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429
 
 
 if __name__ == '__main__':
