@@ -25,7 +25,6 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Adjustments for the input field and button layout */
 .input-field {
     display: flex;
     flex-wrap: wrap;
@@ -55,7 +54,7 @@ h1 {
 }
 
 .input-field button {
-    background-color: #4466ee; /* Add Post Button Blue */
+    background-color: #4466ee;
     color: #fff;
     cursor: pointer;
 }
@@ -64,14 +63,12 @@ h1 {
     background-color: #3355dd;
 }
 
-/* Container for the posts */
 #post-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-/* Style for individual post cards */
 .post {
     border-radius: 8px;
     background-color: #f5f5f5;
@@ -106,7 +103,6 @@ h1 {
     font-style: italic;
 }
 
-/* Button wrapper for alignment */
 .button-wrapper {
     display: flex;
     gap: 10px;
@@ -114,7 +110,6 @@ h1 {
     justify-content: flex-end;
 }
 
-/* Common button styles */
 .button-wrapper button {
     padding: 8px 15px;
     font-size: 14px;
@@ -124,7 +119,6 @@ h1 {
     transition: background-color 0.3s ease;
 }
 
-/* Specific styles for Delete button (Red) */
 .button-wrapper button.delete {
     background-color: red;
     color: white;
@@ -134,12 +128,11 @@ h1 {
     background-color: #cc0000;
 }
 
-/* Specific styles for Update button (Blue, consistent with Add Post button) */
 .button-wrapper button.update {
-    background-color: #4466ee; /* Blue color */
+    background-color: #4466ee;
     color: white;
 }
 
 .button-wrapper button.update:hover {
-    background-color: #3355dd; /* Darker blue on hover */
+    background-color: #3355dd;
 }

@@ -9,7 +9,10 @@ window.onload = function() {
     }
 }
 
-// Function to fetch all the posts from the API and display them on the page
+/**
+ * Fetches all the posts from the API and displays them on the page.
+ * The posts are displayed in the 'post-container' element.
+ */
 function loadPosts() {
     // Retrieve the base URL from the input field and save it to local storage
     var baseUrl = document.getElementById('api-base-url').value;
@@ -48,8 +51,10 @@ function loadPosts() {
         .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
 }
 
-
-// Function to send a POST request to the API to add a new post
+/**
+ * Sends a POST request to the API to add a new post.
+ * Retrieves the values from the input fields and sends the post data.
+ */
 function addPost() {
     // Retrieve the values from the input fields
     var baseUrl = document.getElementById('api-base-url').value;
@@ -85,7 +90,10 @@ function addPost() {
     .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
 }
 
-// Function to send a DELETE request to the API to delete a post
+/**
+ * Sends a DELETE request to the API to delete a post.
+ * @param {number} postId - The ID of the post to be deleted.
+ */
 function deletePost(postId) {
     var baseUrl = document.getElementById('api-base-url').value;
 
@@ -100,6 +108,10 @@ function deletePost(postId) {
     .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
 }
 
+/**
+ * Prompts the user to update a post and sends a PUT request to the API.
+ * @param {number} postId - The ID of the post to be updated.
+ */
 function editPost(postId) {
     var baseUrl = document.getElementById('api-base-url').value;
 

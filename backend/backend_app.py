@@ -26,6 +26,8 @@ limiter = Limiter(get_remote_address, app=app)
 def load_posts():
     """
     Loads the blog posts from the JSON file.
+    Attempts to load the blog posts from the 'posts.json' file. If the file is not found
+    or there is an issue decoding the JSON, an empty list is returned.
     Returns:
         list: A list of blog post dictionaries from the JSON file.
     """
@@ -43,6 +45,7 @@ def load_posts():
 def save_posts(posts):
     """
     Saves the blog posts to the JSON file.
+    Serializes the list of blog post dictionaries and writes them to the 'posts.json' file.
     Args:
         posts (list): A list of blog post dictionaries to save.
     """
@@ -58,6 +61,16 @@ def save_posts(posts):
 
 
 def validate_post_data(data, partial=False):
+    """
+    Validates the data for a blog post.
+    Checks if required fields like 'author', 'title', 'content', and 'date' are present
+    and have valid values. If 'partial' is True, only the provided fields are validated.
+    Args:
+        data (dict): The blog post data to validate.
+        partial (bool): Flag to indicate whether partial validation is required.
+    Returns:
+        list: A list of validation error messages, or None if valid.
+    """
     validation_errors = []
 
     # Validate only provided fields if partial=True
@@ -89,11 +102,14 @@ def validate_post_data(data, partial=False):
 def get_posts():
     """
     Retrieve a paginated and sorted list of blog posts.
+    Accepts query parameters to sort, filter, and paginate the results.
     Query Params:
         sort (str): Field to sort by ('title', 'content', 'author', 'date').
         direction (str): Sort direction ('asc' or 'desc').
         page (int): Page number for pagination (default is 1).
         limit (int): Number of posts per page (default is 5).
+    Returns:
+        JSON: Paginated and sorted list of blog posts.
     """
     blog_posts = load_posts()
     sort = request.args.get('sort')
@@ -124,6 +140,9 @@ def get_posts():
 def add_post():
     """
     Create a new blog post with the provided data.
+    Receives JSON data for a new post, validates it, assigns it a unique ID, and saves it.
+    Returns:
+        JSON: The newly created blog post data.
     """
     blog_posts = load_posts()
     new_post = request.get_json()
@@ -143,6 +162,12 @@ def add_post():
 def find_post_by_id(blog_posts, post_id):
     """
     Find a post by its ID.
+    Searches for a blog post in the list based on the provided post ID.
+    Args:
+        blog_posts (list): List of blog post dictionaries.
+        post_id (int): The ID of the post to find.
+    Returns:
+        dict: The blog post with the matching ID, or None if not found.
     """
     return next((post for post in blog_posts if post['id'] == post_id), None)
 
@@ -152,6 +177,11 @@ def find_post_by_id(blog_posts, post_id):
 def delete_post(id):
     """
     Delete a blog post by ID.
+    Deletes the blog post with the given ID from the data store and returns a success message.
+    Args:
+        id (int): The ID of the post to delete.
+    Returns:
+        JSON: A success message or an error if the post was not found.
     """
     blog_posts = load_posts()
     post = find_post_by_id(blog_posts, id)
@@ -169,6 +199,11 @@ def delete_post(id):
 def update_post(id):
     """
     Update a blog post by ID with provided data.
+    Accepts partial updates to a blog post's fields.
+    Args:
+        id (int): The ID of the post to update.
+    Returns:
+        JSON: The updated blog post data or an error if the post was not found.
     """
     blog_posts = load_posts()
     post = find_post_by_id(blog_posts, id)
@@ -198,11 +233,14 @@ def update_post(id):
 def search_post():
     """
     Search for blog posts by title, content, author, or date.
+    Searches through the blog posts for matches with the provided query parameters.
     Query Params:
         title (str): Keyword in the title.
         content (str): Keyword in the content.
         author (str): Keyword in the author.
         date (str): Exact match on the date.
+    Returns:
+        JSON: List of matching blog posts.
     """
     blog_posts = load_posts()
     search_posts = []
@@ -214,10 +252,10 @@ def search_post():
 
     for post in blog_posts:
         if (
-            (title and title.lower() in post['title'].lower()) or
-            (content and content.lower() in post['content'].lower()) or
-            (author and author.lower() in post['author'].lower()) or
-            (date and date == post['date'])  # exact match for date
+                (title and title.lower() in post['title'].lower()) or
+                (content and content.lower() in post['content'].lower()) or
+                (author and author.lower() in post['author'].lower()) or
+                (date and date == post['date'])  # exact match for date
         ):
             search_posts.append(post)
 
@@ -228,6 +266,11 @@ def search_post():
 def rate_limit_exceeded(e):
     """
     Custom error handler for rate limit exceeded.
+    Returns a message when the rate limit is exceeded.
+    Args:
+        e (Exception): The exception triggered by rate limiting.
+    Returns:
+        JSON: A rate limit exceeded message.
     """
     return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429
 
