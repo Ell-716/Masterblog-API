@@ -57,36 +57,31 @@ def save_posts(posts):
         print(f"JSON encoding error: {e}")
 
 
-def validate_post_data(data):
-    """
-    Validates the data for a blog post.
-    Args:
-        data (dict): The post data to validate.
-    Returns:
-        dict or None: Validation errors if any, otherwise None.
-    """
-    errors = {}
+def validate_post_data(data, partial=False):
+    validation_errors = []
 
-    if "title" not in data:
-        errors["title"] = "Title is required."
-    elif not data["title"].strip():
-        errors["title"] = "Title cannot be empty."
-    elif len(data["title"]) > 100:
-        errors["title"] = "Title cannot exceed 100 characters."
+    # Validate only provided fields if partial=True
+    if 'author' in data and (not isinstance(data['author'], str) or not data['author'].strip()):
+        validation_errors.append('Author must be a non-empty string.')
+    elif 'author' not in data and not partial:
+        validation_errors.append("Author is required.")
 
-    if "content" not in data:
-        errors["content"] = "Content is required."
-    elif not data["content"].strip():
-        errors["content"] = "Content cannot be empty."
-    elif len(data["content"]) > 1000:
-        errors["content"] = "Content cannot exceed 1000 characters."
+    if 'title' in data and (not isinstance(data['title'], str) or not data['title'].strip()):
+        validation_errors.append('Title must be a non-empty string.')
+    elif 'title' not in data and not partial:
+        validation_errors.append("Title is required.")
 
-    if "author" not in data:
-        errors["author"] = "Author is required."
-    elif not data["author"].strip():
-        errors["author"] = "Author cannot be empty."
+    if 'content' in data and (not isinstance(data['content'], str) or not data['content'].strip()):
+        validation_errors.append('Content must be a non-empty string.')
+    elif 'content' not in data and not partial:
+        validation_errors.append("Content is required.")
 
-    return errors if errors else None
+    if 'date' in data and (not isinstance(data['date'], str) or not data['date'].strip()):
+        validation_errors.append('Date must be a valid string.')
+    elif 'date' not in data and not partial:
+        validation_errors.append("Date is required.")
+
+    return validation_errors if validation_errors else None
 
 
 @app.route('/api/posts', methods=['GET'])
@@ -185,13 +180,14 @@ def update_post(id):
     if not updated_data:
         return jsonify({"error": "No data provided for update"}), 400
 
-    validation_errors = validate_post_data(updated_data)
+    # Validate only fields present in the updated_data
+    validation_errors = validate_post_data(updated_data, partial=True)
     if validation_errors:
         return jsonify({"error": "Invalid post data", "details": validation_errors}), 400
 
-    for key in ['title', 'content', 'author', 'date']:
-        if key in updated_data:
-            post[key] = updated_data[key]
+    # Update only the fields present in the request data
+    for key, value in updated_data.items():
+        post[key] = value
 
     save_posts(blog_posts)
     return jsonify(post)

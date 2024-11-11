@@ -1,30 +1,23 @@
 [
     {
-        "id": 1,
-        "title": "Updated First Post",
-        "content": "This is the updated content.",
-        "author": "Jane Smith",
-        "date": "2024-11-11"
-    },
-    {
         "id": 2,
         "title": "Second post",
-        "content": "This is the second post.",
-        "author": "Your Name",
+        "content": "This is the updated post",
+        "author": "Mary",
         "date": "2023-06-08"
     },
     {
-        "author": "Other Name",
-        "content": "This is the new post.",
-        "title": "New post",
+        "author": "Jane Smith",
+        "content": "This is the first post",
+        "title": "First Post",
         "date": "2024-11-11",
         "id": 4
     },
     {
-        "title": "My post",
-        "content": "Here is my post",
-        "author": "Unknown",
+        "title": "Third post ",
+        "content": "This will be my third post here",
+        "author": "Oleg Pavlov",
         "date": "2024-11-11",
-        "id": 5
+        "id": 7
     }
 ]

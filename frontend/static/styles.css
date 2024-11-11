@@ -19,8 +19,16 @@ body {
     margin: auto;
 }
 
+h1 {
+    color: #4466ee;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Adjustments for the input field and button layout */
 .input-field {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     margin-bottom: 20px;
 }
@@ -34,11 +42,12 @@ body {
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.5s ease;
+    margin-right: 10px;
 }
 
 .input-field input {
     flex-grow: 1;
-    margin-right: 10px;
+    min-width: 180px;
 }
 
 .input-field input::placeholder {
@@ -46,7 +55,7 @@ body {
 }
 
 .input-field button {
-    background-color: #4466ee;
+    background-color: #4466ee; /* Add Post Button Blue */
     color: #fff;
     cursor: pointer;
 }
@@ -55,6 +64,14 @@ body {
     background-color: #3355dd;
 }
 
+/* Container for the posts */
+#post-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Style for individual post cards */
 .post {
     border-radius: 8px;
     background-color: #f5f5f5;
@@ -89,18 +106,40 @@ body {
     font-style: italic;
 }
 
-.post button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #ff4444;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
+/* Button wrapper for alignment */
+.button-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: flex-end;
 }
 
-.post button:hover {
+/* Common button styles */
+.button-wrapper button {
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+/* Specific styles for Delete button (Red) */
+.button-wrapper button.delete {
+    background-color: red;
+    color: white;
+}
+
+.button-wrapper button.delete:hover {
     background-color: #cc0000;
+}
+
+/* Specific styles for Update button (Blue, consistent with Add Post button) */
+.button-wrapper button.update {
+    background-color: #4466ee; /* Blue color */
+    color: white;
+}
+
+.button-wrapper button.update:hover {
+    background-color: #3355dd; /* Darker blue on hover */
 }

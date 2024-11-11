@@ -34,7 +34,12 @@ function loadPosts() {
                     <p><strong>Author:</strong> ${post.author}</p>
                     <p><strong>Date:</strong> ${post.date}</p>
                     <p>${post.content}</p>
-                    <button onclick="deletePost(${post.id})">Delete</button>
+                    <div class="button-wrapper">
+                        <!-- Update button -->
+                        <button class="update" onclick="editPost(${post.id})">Update</button>
+                        <!-- Delete button -->
+                        <button class="delete" onclick="deletePost(${post.id})">Delete</button>
+                    </div>
                 `;
 
                 postContainer.appendChild(postDiv);
@@ -43,13 +48,14 @@ function loadPosts() {
         .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
 }
 
+
 // Function to send a POST request to the API to add a new post
 function addPost() {
     // Retrieve the values from the input fields
     var baseUrl = document.getElementById('api-base-url').value;
     var postTitle = document.getElementById('post-title').value;
     var postContent = document.getElementById('post-content').value;
-    var postAuthor = document.getElementById('post-author').value;  // New field for author
+    var postAuthor = document.getElementById('post-author').value;
 
     // Get today's date if not provided
     var postDate = new Date().toISOString().split('T')[0];  // Format: YYYY-MM-DD
@@ -69,6 +75,12 @@ function addPost() {
     .then(post => {
         console.log('Post added:', post);
         loadPosts(); // Reload the posts after adding a new one
+
+        // Clear the input fields after adding the post
+        document.getElementById('post-title').value = '';
+        document.getElementById('post-content').value = '';
+        document.getElementById('post-author').value = '';
+        document.getElementById('post-date').value = '';
     })
     .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
 }
@@ -86,4 +98,37 @@ function deletePost(postId) {
         loadPosts(); // Reload the posts after deleting one
     })
     .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
+}
+
+function editPost(postId) {
+    var baseUrl = document.getElementById('api-base-url').value;
+
+    // Prompt the user for new data (leave blank to keep the current value)
+    var postTitle = prompt('Enter new title (leave blank to keep current):');
+    var postAuthor = prompt('Enter new author (leave blank to keep current):');
+    var postContent = prompt('Enter new content (leave blank to keep current):');
+
+    // Only include fields that the user filled in
+    let updatedFields = {};
+    if (postTitle && postTitle.trim() !== '') updatedFields.title = postTitle.trim();
+    if (postAuthor && postAuthor.trim() !== '') updatedFields.author = postAuthor.trim();
+    if (postContent && postContent.trim() !== '') updatedFields.content = postContent.trim();
+
+    // If no fields were filled, exit the function early
+    if (Object.keys(updatedFields).length === 0) {
+        alert("No changes made to the post.");
+        return;
+    }
+
+    // Send the PUT request with only the fields that need updating
+    fetch(baseUrl + '/posts/' + postId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields)
+    })
+    .then(response => response.json())
+    .then(updatedPost => {
+        loadPosts();  // Reload posts after update
+    })
+    .catch(error => console.error('Error:', error));
 }
