@@ -1,3 +1,4 @@
+import datetime
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -23,15 +24,26 @@ app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
 limiter = Limiter(get_remote_address, app=app)
 
 POSTS = [
-    {"id": 1, "title": "First post", "content": "This is the first post."},
-    {"id": 2, "title": "Second post", "content": "This is the second post."},
+    {
+        "id": 1,
+        "title": "First post",
+        "content": "This is the first post.",
+        "author": "Your Name",
+        "date": "2023-06-07"
+    },
+    {
+        "id": 2,
+        "title": "Second post",
+        "content": "This is the second post.",
+        "author": "Your Name",
+        "date": "2023-06-08"
+    },
 ]
 
 
 def validate_post_data(data):
     errors = {}
 
-    # Check if 'title' and 'content' are provided
     if "title" not in data:
         errors["title"] = "Title is required."
     elif not data["title"].strip():
@@ -46,7 +58,11 @@ def validate_post_data(data):
     elif len(data["content"]) > 1000:
         errors["content"] = "Content cannot exceed 1000 characters."
 
-    # If there are any errors, return the errors dictionary; otherwise, return None
+    if "author" not in data:
+        errors["author"] = "Author is required."
+    elif not data["author"].strip():
+        errors["author"] = "Author cannot be empty."
+
     if errors:
         return errors
     return None
@@ -55,13 +71,11 @@ def validate_post_data(data):
 @app.route('/api/posts', methods=['GET'])
 @limiter.limit("10/minute")  # Limit to 10 requests per minute
 def get_posts():
-    # Get the sorting and direction parameters
     sort = request.args.get('sort')
     direction = request.args.get('direction')
 
-    # Validate sort and direction
-    if sort and sort not in ['title', 'content']:
-        return jsonify({"error": "Invalid sort field. Must be 'title' or 'content'."}), 400
+    if sort and sort not in ['title', 'content', 'author', 'date']:
+        return jsonify({"error": "Invalid sort field. Must be 'title', 'content', 'author' or 'date'."}), 400
 
     if direction and direction not in ['asc', 'desc']:
         return jsonify({"error": "Invalid direction. Must be 'asc' or 'desc'."}), 400
@@ -89,7 +103,10 @@ def get_posts():
 def add_post():
     new_post = request.get_json()
 
-    # Validate the new post data
+    # If 'date' is not provided, set it to today's date
+    if "date" not in new_post or not new_post["date"].strip():
+        new_post["date"] = datetime.date.today().strftime("%Y-%m-%d")
+
     validation_errors = validate_post_data(new_post)
     if validation_errors:
         return jsonify({"error": "Invalid post data", "details": validation_errors}), 400
@@ -117,7 +134,6 @@ def delete_post(id):
     # Remove the post with the specified id
     POSTS[:] = [post for post in POSTS if post['id'] != id]
 
-    # Return a confirmation message
     return jsonify({"message": f"Post with id {id} has been deleted successfully."}), 200
 
 
@@ -129,7 +145,6 @@ def update_post(id):
     if post is None:
         return jsonify({"error": f"Post with id {id} not found"}), 404
 
-    # Get the updated data from the request body
     updated_post = request.get_json()
 
     if updated_post is None:
@@ -140,6 +155,10 @@ def update_post(id):
         post['title'] = updated_post['title']
     if "content" in updated_post:
         post['content'] = updated_post['content']
+    if "author" in updated_post:
+        post['author'] = updated_post['author']
+    if "date" in updated_post:
+        post['date'] = updated_post['date']
 
     return jsonify(post)
 
@@ -151,14 +170,19 @@ def search_post():
 
     title = request.args.get('title')
     content = request.args.get('content')
+    author = request.args.get('author')
+    date = request.args.get('date')
 
     for post in POSTS:
         if title and title.lower() in post['title'].lower():
             search_posts.append(post)
         elif content and content.lower() in post['content'].lower():
             search_posts.append(post)
+        elif author and author.lower() in post['author'].lower():
+            search_posts.append(post)
+        elif date and date.lower() in post['date'].lower():
+            search_posts.append(post)
 
-    # Return the matching posts (or an empty list if no match)
     return jsonify(search_posts)
 
 

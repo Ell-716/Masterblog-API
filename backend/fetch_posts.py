@@ -9,15 +9,19 @@ def fetch_all_posts(api_url, page=1, limit=5, sort="title", direction="asc"):
     :param api_url: The API URL to fetch posts from.
     :param page: Starting page for pagination.
     :param limit: Number of posts per page.
-    :param sort: Field to sort by ('title' or 'content').
+    :param sort: Field to sort by ('title', 'content', 'author', 'date').
     :param direction: Sort direction ('asc' or 'desc').
     :return: A list of all posts.
     """
+    valid_sort_fields = {"title", "content", "author", "date"}
+    if sort not in valid_sort_fields:
+        raise ValueError(f"Invalid sort field '{sort}'. Choose from {valid_sort_fields}.")
+
     posts_collected = []
 
     while True:
-        # Make a request to get a batch of posts with pagination and sorting
-        response = requests.get(api_url, params={"page": page, "limit": limit, "sort": sort, "direction": direction})
+        response = requests.get(api_url, params={"page": page, "limit": limit, "sort": sort,
+                                                 "direction": direction})
 
         if response.status_code != 200:
             print("Failed to fetch posts:", response.status_code)
@@ -25,7 +29,6 @@ def fetch_all_posts(api_url, page=1, limit=5, sort="title", direction="asc"):
 
         posts = response.json()
 
-        # If no posts are returned, we've reached the end
         if not posts:
             print("No more posts to fetch.")
             break
@@ -40,4 +43,5 @@ def fetch_all_posts(api_url, page=1, limit=5, sort="title", direction="asc"):
     return posts_collected
 
 
+# Fetch all posts, now allowing sorting by 'author' and 'date' too
 all_fetched_posts = fetch_all_posts("http://127.0.0.1:5002/api/posts")
