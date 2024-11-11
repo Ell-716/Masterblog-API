@@ -1,4 +1,5 @@
 import datetime
+import json
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -8,40 +9,62 @@ from flask_swagger_ui import get_swaggerui_blueprint
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
+# Swagger configuration
 SWAGGER_URL = "/api/docs"
 API_URL = "/static/masterblog.json"
-
 swagger_ui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
-    config={
-        'app_name': 'Masterblog API'
-    }
+    config={'app_name': 'Masterblog API'}
 )
 app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
 
 # Initialize Limiter
 limiter = Limiter(get_remote_address, app=app)
 
-POSTS = [
-    {
-        "id": 1,
-        "title": "First post",
-        "content": "This is the first post.",
-        "author": "Your Name",
-        "date": "2023-06-07"
-    },
-    {
-        "id": 2,
-        "title": "Second post",
-        "content": "This is the second post.",
-        "author": "Your Name",
-        "date": "2023-06-08"
-    },
-]
+
+def load_posts():
+    """
+    Loads the blog posts from the JSON file.
+    Returns:
+        list: A list of blog post dictionaries from the JSON file.
+    """
+    try:
+        with open("posts.json", "r", encoding="utf-8") as file:
+            return json.load(file)
+    except FileNotFoundError as e:
+        print(f"posts.json not found: {e}")
+        return []
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON data in posts.json: {e}")
+        return []
+
+
+def save_posts(posts):
+    """
+    Saves the blog posts to the JSON file.
+    Args:
+        posts (list): A list of blog post dictionaries to save.
+    """
+    try:
+        with open("posts.json", "w", encoding="utf-8") as file:
+            json.dump(posts, file, indent=4)
+    except IOError as e:
+        print(f"File write error: {e}")
+    except TypeError as e:
+        print(f"Data serialization error: {e}")
+    except ValueError as e:
+        print(f"JSON encoding error: {e}")
 
 
 def validate_post_data(data):
+    """
+    Validates the data for a blog post.
+    Args:
+        data (dict): The post data to validate.
+    Returns:
+        dict or None: Validation errors if any, otherwise None.
+    """
     errors = {}
 
     if "title" not in data:
@@ -63,109 +86,128 @@ def validate_post_data(data):
     elif not data["author"].strip():
         errors["author"] = "Author cannot be empty."
 
-    if errors:
-        return errors
-    return None
+    return errors if errors else None
 
 
 @app.route('/api/posts', methods=['GET'])
-@limiter.limit("10/minute")  # Limit to 10 requests per minute
+@limiter.limit("10/minute")
 def get_posts():
+    """
+    Retrieve a paginated and sorted list of blog posts.
+    Query Params:
+        sort (str): Field to sort by ('title', 'content', 'author', 'date').
+        direction (str): Sort direction ('asc' or 'desc').
+        page (int): Page number for pagination (default is 1).
+        limit (int): Number of posts per page (default is 5).
+    """
+    blog_posts = load_posts()
     sort = request.args.get('sort')
     direction = request.args.get('direction')
-
-    if sort and sort not in ['title', 'content', 'author', 'date']:
-        return jsonify({"error": "Invalid sort field. Must be 'title', 'content', 'author' or 'date'."}), 400
-
-    if direction and direction not in ['asc', 'desc']:
-        return jsonify({"error": "Invalid direction. Must be 'asc' or 'desc'."}), 400
-
-    # Handle pagination parameters
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 5))
 
-    # First, apply sorting if sort and direction are provided
-    sorted_posts = POSTS
-    if sort:
-        sorted_posts = sorted(POSTS, key=lambda post: post[sort], reverse=(direction == 'desc'))
+    # Sort validation
+    if sort and sort not in ['title', 'content', 'author', 'date']:
+        return jsonify({"error": "Invalid sort field. Must be 'title', 'content', 'author' or 'date'."}), 400
+    if direction and direction not in ['asc', 'desc']:
+        return jsonify({"error": "Invalid direction. Must be 'asc' or 'desc'."}), 400
 
-    # Then, apply pagination to the sorted posts
+    # Apply sorting
+    sorted_posts = sorted(blog_posts, key=lambda post: post.get(sort, ""), reverse=(direction == 'desc')) if sort else blog_posts
+
+    # Pagination
     start_index = (page - 1) * limit
     end_index = start_index + limit
     paginated_posts = sorted_posts[start_index:end_index]
 
-    # Return the paginated and optionally sorted posts
     return jsonify(paginated_posts)
 
 
 @app.route('/api/posts', methods=['POST'])
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 def add_post():
+    """
+    Create a new blog post with the provided data.
+    """
+    blog_posts = load_posts()
     new_post = request.get_json()
-
-    # If 'date' is not provided, set it to today's date
-    if "date" not in new_post or not new_post["date"].strip():
-        new_post["date"] = datetime.date.today().strftime("%Y-%m-%d")
+    new_post["date"] = new_post.get("date", datetime.date.today().strftime("%Y-%m-%d"))
 
     validation_errors = validate_post_data(new_post)
     if validation_errors:
         return jsonify({"error": "Invalid post data", "details": validation_errors}), 400
 
-    # Generate a unique ID for the new post
-    new_id = max(post['id'] for post in POSTS) + 1
-    new_post['id'] = new_id
-
-    POSTS.append(new_post)
+    new_id = max((post["id"] for post in blog_posts), default=0) + 1
+    new_post["id"] = new_id
+    blog_posts.append(new_post)
+    save_posts(blog_posts)
     return jsonify(new_post), 201
 
 
-def find_post_by_id(post_id):
-    return next((post for post in POSTS if post['id'] == post_id), None)
+def find_post_by_id(blog_posts, post_id):
+    """
+    Find a post by its ID.
+    """
+    return next((post for post in blog_posts if post['id'] == post_id), None)
 
 
 @app.route('/api/posts/<int:id>', methods=['DELETE'])
-@limiter.limit("10/minute")
+@limiter.limit("3/minute")
 def delete_post(id):
-    post = find_post_by_id(id)
+    """
+    Delete a blog post by ID.
+    """
+    blog_posts = load_posts()
+    post = find_post_by_id(blog_posts, id)
 
     if post is None:
         return jsonify({"error": f"Post with id {id} not found"}), 404
 
-    # Remove the post with the specified id
-    POSTS[:] = [post for post in POSTS if post['id'] != id]
-
+    blog_posts = [post for post in blog_posts if post["id"] != id]
+    save_posts(blog_posts)
     return jsonify({"message": f"Post with id {id} has been deleted successfully."}), 200
 
 
 @app.route('/api/posts/<int:id>', methods=['PUT'])
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 def update_post(id):
-    post = find_post_by_id(id)
+    """
+    Update a blog post by ID with provided data.
+    """
+    blog_posts = load_posts()
+    post = find_post_by_id(blog_posts, id)
 
     if post is None:
         return jsonify({"error": f"Post with id {id} not found"}), 404
 
-    updated_post = request.get_json()
+    updated_data = request.get_json()
+    if not updated_data:
+        return jsonify({"error": "No data provided for update"}), 400
 
-    if updated_post is None:
-        return jsonify({"error": "Invalid post data"}), 400
+    validation_errors = validate_post_data(updated_data)
+    if validation_errors:
+        return jsonify({"error": "Invalid post data", "details": validation_errors}), 400
 
-    # Update only the fields that are provided, keep the current values for missing fields
-    if "title" in updated_post:
-        post['title'] = updated_post['title']
-    if "content" in updated_post:
-        post['content'] = updated_post['content']
-    if "author" in updated_post:
-        post['author'] = updated_post['author']
-    if "date" in updated_post:
-        post['date'] = updated_post['date']
+    for key in ['title', 'content', 'author', 'date']:
+        if key in updated_data:
+            post[key] = updated_data[key]
 
+    save_posts(blog_posts)
     return jsonify(post)
 
 
 @app.route('/api/posts/search', methods=['GET'])
 @limiter.limit("10/minute")
 def search_post():
+    """
+    Search for blog posts by title, content, author, or date.
+    Query Params:
+        title (str): Keyword in the title.
+        content (str): Keyword in the content.
+        author (str): Keyword in the author.
+        date (str): Exact match on the date.
+    """
+    blog_posts = load_posts()
     search_posts = []
 
     title = request.args.get('title')
@@ -173,14 +215,13 @@ def search_post():
     author = request.args.get('author')
     date = request.args.get('date')
 
-    for post in POSTS:
-        if title and title.lower() in post['title'].lower():
-            search_posts.append(post)
-        elif content and content.lower() in post['content'].lower():
-            search_posts.append(post)
-        elif author and author.lower() in post['author'].lower():
-            search_posts.append(post)
-        elif date and date.lower() in post['date'].lower():
+    for post in blog_posts:
+        if (
+            (title and title.lower() in post['title'].lower()) or
+            (content and content.lower() in post['content'].lower()) or
+            (author and author.lower() in post['author'].lower()) or
+            (date and date == post['date'])  # exact match for date
+        ):
             search_posts.append(post)
 
     return jsonify(search_posts)
@@ -188,6 +229,9 @@ def search_post():
 
 @app.errorhandler(429)
 def rate_limit_exceeded(e):
+    """
+    Custom error handler for rate limit exceeded.
+    """
     return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429
 
 

@@ -43,5 +43,4 @@ def fetch_all_posts(api_url, page=1, limit=5, sort="title", direction="asc"):
     return posts_collected
 
 
-# Fetch all posts, now allowing sorting by 'author' and 'date' too
 all_fetched_posts = fetch_all_posts("http://127.0.0.1:5002/api/posts")

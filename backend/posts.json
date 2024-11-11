@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "title": "Updated First Post",
+        "content": "This is the updated content.",
+        "author": "Jane Smith",
+        "date": "2024-11-11"
+    },
+    {
+        "id": 2,
+        "title": "Second post",
+        "content": "This is the second post.",
+        "author": "Your Name",
+        "date": "2023-06-08"
+    },
+    {
+        "author": "Other Name",
+        "content": "This is the new post.",
+        "title": "New post",
+        "date": "2024-11-11",
+        "id": 4
+    }
+]
