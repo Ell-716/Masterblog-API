@@ -10,15 +10,22 @@
 <body>
     <div class="container">
         <h1>📚 Blog Posts</h1>
+
+        <!-- API Base URL input -->
         <div class="input-field">
             <input type="text" id="api-base-url" placeholder="Enter API Base URL" value="http://127.0.0.1:5002/api">
             <button onclick="loadPosts()">Load Posts</button>
         </div>
+
+        <!-- Post creation form -->
         <div class="input-field">
             <input type="text" id="post-title" placeholder="Enter Post Title">
+            <input type="text" id="post-author" placeholder="Enter Author Name"> <!-- New input for Author -->
             <input type="text" id="post-content" placeholder="Enter Post Content">
             <button onclick="addPost()">Add Post</button>
         </div>
+
+        <!-- Container for displaying blog posts -->
         <div id="post-container">
             <!-- Blog posts will be inserted here by JavaScript -->
         </div>

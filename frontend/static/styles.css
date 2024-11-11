@@ -74,6 +74,21 @@ body {
     color: #333;
 }
 
+.post .author,
+.post .date {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #777;
+}
+
+.post .author {
+    font-weight: 600;
+}
+
+.post .date {
+    font-style: italic;
+}
+
 .post button {
     position: absolute;
     top: 10px;

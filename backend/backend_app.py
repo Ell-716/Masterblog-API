@@ -113,7 +113,8 @@ def get_posts():
         return jsonify({"error": "Invalid direction. Must be 'asc' or 'desc'."}), 400
 
     # Apply sorting
-    sorted_posts = sorted(blog_posts, key=lambda post: post.get(sort, ""), reverse=(direction == 'desc')) if sort else blog_posts
+    sorted_posts = sorted(blog_posts, key=lambda post: post.get(sort, ""),
+                          reverse=(direction == 'desc')) if sort else blog_posts
 
     # Pagination
     start_index = (page - 1) * limit

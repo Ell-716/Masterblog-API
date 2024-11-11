@@ -19,5 +19,12 @@
         "title": "New post",
         "date": "2024-11-11",
         "id": 4
+    },
+    {
+        "title": "My post",
+        "content": "Here is my post",
+        "author": "Unknown",
+        "date": "2024-11-11",
+        "id": 5
     }
 ]
